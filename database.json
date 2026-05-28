@@ -855,14 +855,6 @@
         "fraudStatus": "Clean - Verified Valid",
         "imagePath": "images/plc_20_forever.jpg"
     },
-    "AAC004130928": {
-        "amount": 20,
-        "type": "Forever PLC",
-        "expiryDate": "N/A (Never Expires)",
-        "localArea": "NPC",
-        "fraudStatus": "Clean - Verified Valid",
-        "imagePath": "images/plc_20_forever.jpg"
-    },
     "AAB003465667": {
         "amount": 2,
         "type": "Forever PLC",
@@ -1024,14 +1016,6 @@
         "imagePath": "images/plc_10_forever.jpg"
     },
     "AAB004738950": {
-        "amount": 10,
-        "type": "Forever PLC",
-        "expiryDate": "N/A (Never Expires)",
-        "localArea": "NPC",
-        "fraudStatus": "Clean - Verified Valid",
-        "imagePath": "images/plc_10_forever.jpg"
-    },
-    "AAB004838995": {
         "amount": 10,
         "type": "Forever PLC",
         "expiryDate": "N/A (Never Expires)",
