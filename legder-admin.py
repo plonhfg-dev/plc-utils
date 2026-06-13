@@ -4,6 +4,13 @@ import os
 import random
 from collections import defaultdict
 
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+
 DB_FILE = 'database.json'
 
 # DEFCON Security Status Dictionary
@@ -40,6 +47,41 @@ def select_status():
     choice = input("Select Status Level (1-5) [Default: 1]: ").strip()
     return STATUS_LEVELS.get(choice, STATUS_LEVELS["1"])
 
+def create_directory_structure(note_type, forever_status, denomination):
+    forever_dir = "forever" if forever_status == "Forever PLC" else "limited"
+    output_dir = f"outputs-serial/{note_type}/{forever_dir}/{denomination}"
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
+
+def generate_pdf_batch(batch_num, serials, output_path, batch_code):
+    if not REPORTLAB_AVAILABLE:
+        print("[!] ERROR: reportlab not installed. Install with: pip install reportlab")
+        return False
+
+    filename = os.path.join(output_path, f"batch_{batch_code}_{batch_num:03d}.pdf")
+    c = canvas.Canvas(filename, pagesize=letter)
+    width, height = letter
+
+    c.setFont("Helvetica", 12)
+    y_position = height - 40
+
+    c.drawString(40, y_position, f"Batch {batch_code} - Part {batch_num}")
+    y_position -= 20
+    c.drawString(40, y_position, f"Generated: {len(serials)} Serial Numbers")
+    y_position -= 30
+
+    c.setFont("Courier", 10)
+    for serial in serials:
+        if y_position < 40:
+            c.showPage()
+            y_position = height - 40
+            c.setFont("Courier", 10)
+        c.drawString(40, y_position, serial)
+        y_position -= 15
+
+    c.save()
+    return True
+
 def get_common_mint_data():
     amount = input("Enter Denomination Amount (e.g., 100): ").strip()
     
@@ -67,13 +109,14 @@ def main():
         print("="*50)
         print("1. [MINT] Single Note Generation")
         print("2. [BULK MINT] Mass Assembly Line")
-        print("3. [MOVE] Update Location (Single/Bulk)")
-        print("4. [SECURE] Adjust Threat Status (Single/Bulk)")
-        print("5. [QA] Mint Correction (Fix Prefix Collisions)")
-        print("6. [DASHBOARD] Hierarchical Asset Analytics")
-        print("7. [DUMP] View Raw JSON Ledger")
-        print("8. [EDIT] Modify Existing Note Details")
-        print("9. [EXIT] Save and Shutdown Terminal")
+        print("3. [PDF MINT] Batch PDF Generation")
+        print("4. [MOVE] Update Location (Single/Bulk)")
+        print("5. [SECURE] Adjust Threat Status (Single/Bulk)")
+        print("6. [QA] Mint Correction (Fix Prefix Collisions)")
+        print("7. [DASHBOARD] Hierarchical Asset Analytics")
+        print("8. [DUMP] View Raw JSON Ledger")
+        print("9. [EDIT] Modify Existing Note Details")
+        print("10. [EXIT] Save and Shutdown Terminal")
         print("="*50)
         
         choice = input("root@plonhfg-vault:~# Select Operation: ")
@@ -111,18 +154,18 @@ def main():
             batch_code = input("Enter 3-Letter Batch Code (e.g., ABC): ").strip().upper()
             start_num = int(input("Enter STARTING Note Number (e.g., 1): ").strip())
             end_num = int(input("Enter ENDING Note Number (e.g., 50): ").strip())
-            
+
             print("\n[CONFIGURE MASTER PAYLOAD]")
             amount, note_type, expiry, img_path, area, status = get_common_mint_data()
-            
+
             success_count = 0
             generated_serials = []
-            
+
             for i in range(start_num, end_num + 1):
                 note_num = str(i).zfill(4)
                 nonce = str(random.randint(10000, 99999))
                 serial = f"{batch_code}{note_num}{nonce}"
-                
+
                 if serial not in db:
                     db[serial] = {
                         "amount": int(amount) if amount.isdigit() else amount,
@@ -134,7 +177,7 @@ def main():
                     }
                     generated_serials.append(serial)
                     success_count += 1
-            
+
             save_db(db)
             print("\n" + "="*40)
             print(f" BULK MINT COMPLETE: {success_count} NOTES")
@@ -145,10 +188,83 @@ def main():
             input("\n[SYSTEM PAUSE] Copy these serials to your physical batch. Press ENTER when finished...")
 
         elif choice == '3':
+            if not REPORTLAB_AVAILABLE:
+                print("[!] ERROR: PDF MINT requires reportlab library.")
+                print("[!] Install with: pip install reportlab")
+                input("\n[SYSTEM] Press ENTER to continue...")
+                continue
+
+            print("\n--- PDF BATCH MINT GENERATION ---")
+            note_category = input("Is this Old or New batch? (old/new): ").strip().lower()
+            if note_category not in ['old', 'new']:
+                print("[!] ERROR: Please enter 'old' or 'new'")
+                continue
+
+            batch_size = 10 if note_category == 'old' else 8
+            batch_code = input("Enter 3-Letter Batch Code (e.g., ABC): ").strip().upper()
+            amount = input("Enter Denomination Amount (e.g., 100): ").strip()
+
+            is_forever = input("Is this a Forever Note? (y/n): ").strip().lower()
+            if is_forever == 'y':
+                note_type = "Forever PLC"
+                forever_status_key = "Forever PLC"
+            else:
+                note_type = "Time Limited PLC"
+                forever_status_key = "Time Limited PLC"
+
+            area = input("Enter Local Area / Issued To: ").strip()
+            status = select_status()
+            img_path = f"images/plc_{amount}_{('forever' if is_forever == 'y' else 'limited')}.jpg"
+
+            num_notes = int(input("Enter total number of notes to generate: ").strip())
+
+            output_dir = create_directory_structure(note_category, forever_status_key, amount)
+
+            success_count = 0
+            generated_serials = []
+            batch_num = 1
+            current_batch = []
+
+            for i in range(1, num_notes + 1):
+                note_num = str(i).zfill(4)
+                nonce = str(random.randint(10000, 99999))
+                serial = f"{batch_code}{note_num}{nonce}"
+
+                if serial not in db:
+                    db[serial] = {
+                        "amount": int(amount) if amount.isdigit() else amount,
+                        "type": note_type,
+                        "expiryDate": "N/A (Never Expires)" if is_forever == 'y' else input(f"Enter Expiry Date for batch [{i}/{num_notes}] (e.g., '15 June 2026'): ").strip(),
+                        "localArea": area,
+                        "fraudStatus": status,
+                        "imagePath": img_path
+                    }
+                    generated_serials.append(serial)
+                    current_batch.append(serial)
+                    success_count += 1
+
+                    if len(current_batch) == batch_size or i == num_notes:
+                        if generate_pdf_batch(batch_num, current_batch, output_dir, batch_code):
+                            print(f"[+] PDF created: batch_{batch_code}_{batch_num:03d}.pdf ({len(current_batch)} serials)")
+                        batch_num += 1
+                        current_batch = []
+
+            save_db(db)
+            print("\n" + "="*40)
+            print(f" PDF BATCH MINT COMPLETE: {success_count} NOTES")
+            print(f" Location: {output_dir}")
+            print("="*40)
+            print(" Generated Serials:")
+            for s in generated_serials:
+                print(f" {s}")
+            print("="*40)
+            input("\n[SYSTEM PAUSE] PDFs generated successfully. Press ENTER to continue...")
+
+        elif choice == '4':
             print("\n--- ASSET ROUTING (SINGLE/BULK) ---")
             serials = input("Enter Serial Codes (comma separated): ").strip().split(',')
             new_area = input("Enter New Location / State Bank: ").strip()
-            
+
             count = 0
             for s in serials:
                 s = s.strip()
@@ -160,11 +276,11 @@ def main():
             print(f"[+] ROUTING SUCCESS: {count} assets moved to {new_area}.")
             save_db(db)
 
-        elif choice == '4':
+        elif choice == '5':
             print("\n--- THREAT STATUS ADJUSTER (SINGLE/BULK) ---")
             serials = input("Enter Serial Codes (comma separated): ").strip().split(',')
             status = select_status()
-            
+
             count = 0
             for s in serials:
                 s = s.strip()
@@ -176,13 +292,13 @@ def main():
             print(f"[+] SECURITY OVERRIDE: {count} assets updated to '{status}'.")
             save_db(db)
 
-        elif choice == '5':
+        elif choice == '6':
             print("\n--- MINT CORRECTION QA (Orphan Node Sweeper) ---")
             prefix_map = defaultdict(list)
             for serial in db.keys():
                 prefix = serial[:7]
                 prefix_map[prefix].append(serial)
-            
+
             collisions_found = False
             for prefix, serial_list in prefix_map.items():
                 if len(serial_list) > 1:
@@ -190,7 +306,7 @@ def main():
                     print(f"\n[!] COLLISION DETECTED for Physical Note: {prefix}")
                     for idx, s in enumerate(serial_list):
                         print(f"  [{idx + 1}] {s} (Area: {db[s]['localArea']}, Status: {db[s]['fraudStatus']})")
-                    
+
                     keep_idx = input(f"Which one is the REAL physical note? (1-{len(serial_list)}, or 'skip'): ").strip()
                     if keep_idx.isdigit() and 1 <= int(keep_idx) <= len(serial_list):
                         real_serial = serial_list[int(keep_idx) - 1]
@@ -198,34 +314,34 @@ def main():
                             if s != real_serial:
                                 del db[s]
                                 print(f"[-] PURGED ghost record: {s}")
-            
+
             if not collisions_found:
                 print("[+] SYSTEM CLEAN: No physical note collisions detected.")
             else:
                 save_db(db)
 
-        elif choice == '6':
+        elif choice == '7':
             print("\n" + "="*50)
             print("   MACRO-ECONOMIC DASHBOARD v2.0")
             print("="*50)
-            
+
             total_notes = len(db)
             total_value = 0
-            
+
             # Dictionary structure: grouped_data[ForeverStatus][Denomination][BatchCode] = [List of Serials]
             grouped_data = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-            
+
             for serial, data in db.items():
                 amt = data.get('amount', 0)
                 total_value += amt if isinstance(amt, int) else 0
-                
+
                 is_forever = "Yes" if "Forever" in data.get('type', '') else "No (Time Limited)"
                 batch = serial[:3]
-                
+
                 grouped_data[is_forever][amt][batch].append(serial)
-            
+
             print(f"TOTAL CIRCULATING SUPPLY: {total_value} PLC across {total_notes} notes.\n")
-            
+
             for forever_status in sorted(grouped_data.keys(), reverse=True):
                 print(f"■ FOREVER STATUS: {forever_status}")
                 for amt in sorted(grouped_data[forever_status].keys(), reverse=True):
@@ -237,16 +353,16 @@ def main():
                             print(f"  │  │   - {s}")
                         print(f"  │  │  (Total count for {batch}: {len(serials)})")
                 print("  │")
-                
+
             input("\n[SYSTEM] Press ENTER to return to the main menu...")
 
-        elif choice == '7':
+        elif choice == '8':
             print("\n--- MASTER LEDGER DUMP ---")
             print(json.dumps(db, indent=4))
             print("--------------------------")
             input("\n[SYSTEM] Press ENTER to return to the main menu...")
 
-        elif choice == '8':
+        elif choice == '9':
             serial = input("Enter Serial Code to Modify: ").strip()
             if serial in db:
                 print("\n[SYSTEM] Press ENTER to keep current data, or type new data.")
@@ -262,7 +378,7 @@ def main():
             else:
                 print("[!] ERROR: 404 Serial Not Found.")
 
-        elif choice == '9':
+        elif choice == '10':
             save_db(db)
             print("Shutting down ERP interface. Goodbye, Lead SysAdmin.")
             break
