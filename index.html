@@ -32,8 +32,8 @@
         <p><strong>Expiration Date:</strong> <span id="resExpiry"></span></p>
         <p><strong>Issue Area:</strong> <span id="resArea"></span></p>
         <p><strong>Banknote Status:</strong> <span id="resStatus"></span></p>
-
         <button id="fraudBtn" class="danger" onclick="reportFraud()">REPORT COUNTERFEIT TO ADMIN</button>
+         <button id="fraudBtn" class="danger" onclick="reporttoadmin()">REPORT TO ADMIN</button>
     </div>
 </div>
 
@@ -115,6 +115,22 @@
         } else {
             // If the note is completely unknown to the system
             bodyText = `Admin,\n\nI am reporting a completely UNKNOWN serial code that someone attempted to use. It failed the Central Bank checksum.\n\nAttempted Serial Code: ${currentSerial}\n\nAdditional details about who gave me this counterfeit note:\n[TYPE YOUR DETAILS HERE]`;
+        }
+
+        window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+    }
+
+       function reporttoadmin() {
+        if(!currentSerial) return;
+
+        const adminEmail = "plonhfg@gmail.com"; // Replace with your actual email
+        const subject = encodeURIComponent(`URGENT FRAUD REPORT: PLC Note ${currentSerial}`);
+
+        let bodyText = "";
+
+      
+            bodyText = `Admin,\n\nI am reporting a PLONHFG Credit note. Here are the details logged from the system:\n\nSerial Code: ${currentSerial}\nDenomination: ${dbEntry.amount} PLC\nType: ${dbEntry.type}\nExpiry: ${dbEntry.expiryDate}\nRegistered Location: ${dbEntry.localArea}\nCurrent Status: ${dbEntry.fraudStatus}\n\nAdditional details about who gave me this note:\n[TYPE YOUR DETAILS HERE]`;
+       
         }
 
         window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
