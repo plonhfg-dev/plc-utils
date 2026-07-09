@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC Utils - Central Hub</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --secondary-dark: #047857;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-alt: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #e0f2fe) 100%;
+            color: var(--text-primary);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            padding: 30px 25px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .card-header.alt {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .card-body {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .card-features li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .card-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            gap: 8px;
+        }
+
+        .card-link:hover {
+            background: var(--primary-dark);
+            transform: translateX(4px);
+        }
+
+        .card:nth-child(2) .card-link {
+            background: var(--secondary);
+        }
+
+        .card:nth-child(2) .card-link:hover {
+            background: var(--secondary-dark);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .card-header {
+                padding: 25px;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🏛️ PLC Utils</h1>
+        <p>Comprehensive tools for managing and verifying PLC (PLONHFG Credit) records and transactions</p>
+    </div>
+
+    <div class="cards-grid">
+        <!-- Debt Recorder Card -->
+        <a href="plc-debt-recorder/index.html" class="card">
+            <div class="card-header">
+                <div class="card-icon">📚</div>
+                <div class="card-title">Debt Registry</div>
+                <div class="card-subtitle">Manage & Search Records</div>
+            </div>
+            <div class="card-body">
+                <p class="card-description">
+                    Search and manage debt records with comprehensive filtering capabilities. Find records by serial number, debt ID, or alias.
+                </p>
+                <ul class="card-features">
+                    <li>Multi-parameter search</li>
+                    <li>Serial number lookup</li>
+                    <li>Debt ID tracking</li>
+                    <li>Date recording</li>
+                </ul>
+                <a href="plc-debt-recorder/index.html" class="card-link">
+                    Access Registry
+                    <span>→</span>
+                </a>
+            </div>
+        </a>
+
+        <!-- PLC Verifier Card -->
+        <a href="plc-verifier/index.html" class="card">
+            <div class="card-header alt">
+                <div class="card-icon">🔐</div>
+                <div class="card-title">PLC Verifier</div>
+                <div class="card-subtitle">Verify Authenticity</div>
+            </div>
+            <div class="card-body">
+                <p class="card-description">
+                    Verify the authenticity of PLC notes and check their status in the central bank ledger. Detect counterfeit or fraudulent notes.
+                </p>
+                <ul class="card-features">
+                    <li>Authenticity verification</li>
+                    <li>Fraud detection</li>
+                    <li>TTL (Time-to-Live) checks</li>
+                    <li>Admin reporting</li>
+                </ul>
+                <a href="plc-verifier/index.html" class="card-link">
+                    Verify Notes
+                    <span>→</span>
+                </a>
+            </div>
+        </a>
+    </div>
+
+    <div class="footer">
+        <p>
+            PLC Utils v1.0 • 
+            <a href="https://github.com/plonhfg-dev/plc-utils" target="_blank">GitHub Repository</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
