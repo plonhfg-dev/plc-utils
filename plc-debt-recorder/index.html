@@ -3,171 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Registry Search</title>
+    <title>PLC Debt Recorder</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --secondary-dark: #047857;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-alt: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --error-bg: #fee2e2;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+        }
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #e0f2fe) 100%;
+            color: var(--text-primary);
             padding: 20px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
-        .search-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .container {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 40px;
             width: 100%;
-            max-width: 520px;
+            max-width: 600px;
         }
-        h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 13px;
-            margin-bottom: 25px;
-        }
+
         .file-picker-box {
-            background-color: #edf2f7;
-            border: 2px dashed #cbd5e0;
-            padding: 15px;
+            background: var(--surface-alt);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
             text-align: center;
-            border-radius: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: none;
         }
+
+        .file-picker-box p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
         .file-picker-box label {
             display: inline-block;
-            background-color: #4a5568;
+            background: var(--primary);
             color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
-            margin-top: 5px;
+            transition: background 0.2s;
         }
+
+        .file-picker-box label:hover {
+            background: var(--primary-dark);
+        }
+
         .file-picker-box input[type="file"] {
             display: none;
         }
+
         .input-group {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
+
         input[type="text"] {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-            font-size: 16px;
-            outline: none;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            color: var(--text-primary);
+            background: var(--surface);
+            transition: border-color 0.2s;
         }
+
         input[type="text"]:focus {
-            border-color: #3498db;
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+
         button {
-            padding: 12px 20px;
-            background-color: #3498db;
+            padding: 12px 24px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
+            border-radius: 6px;
+            font-size: 15px;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
+
         button:hover {
-            background-color: #2980b9;
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .message-box {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-box.error {
+            background: var(--error-bg);
+            color: var(--error);
+            border-left: 4px solid var(--error);
+        }
+
+        .message-box.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
         .results-wrapper {
             margin-top: 20px;
         }
+
         .result-card {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
             padding: 20px;
-            border-radius: 6px;
-            background-color: #fafbfc;
-            border-left: 4px solid #2ecc71;
             margin-bottom: 15px;
+            transition: all 0.2s;
         }
+
+        .result-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
         .data-row {
-            margin-bottom: 10px;
-            font-size: 15px;
-            color: #34495e;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
         }
+
         .data-row strong {
-            color: #2c3e50;
-            display: inline-block;
-            width: 160px;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-right: 10px;
         }
-        .message-box {
+
+        .data-row span {
+            color: var(--text-secondary);
+            word-break: break-word;
+        }
+
+        .no-results {
             text-align: center;
-            margin-top: 15px;
-            font-weight: bold;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
+            padding: 30px;
+            color: var(--text-secondary);
         }
-        .error { color: #c53030; background-color: #fff5f5; }
-        .success { color: #22543d; background-color: #f0fff4; }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .data-row {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="search-container">
-    <h2>Registry Search Engine</h2>
-    <div class="subtitle">Search by Serial Number, Alias, or Debt ID</div>
-
-    <div id="localFilePicker" class="file-picker-box">
-        <p style="margin: 0 0 8px 0; font-size: 14px; color: #4a5568;">Direct File Execution Detected.</p>
-        <label for="jsonUpload">Step 1: Select 'debts.json' File</label>
-        <input type="file" id="jsonUpload" accept=".json" onchange="loadLocalDatabase(event)">
+<div>
+    <div class="header">
+        <h1>🏛️ Debt Registry</h1>
+        <p>Search and manage debt records</p>
     </div>
 
-    <div class="input-group">
-        <input type="text" id="searchInput" placeholder="Enter Serial, Alias, or Debt ID...">
-        <button onclick="executeSearch()">Search</button>
-    </div>
+    <div class="container">
+        <div id="localFilePicker" class="file-picker-box">
+            <p>📁 Direct File Execution Detected</p>
+            <label for="jsonUpload">Select 'debts.json' File</label>
+            <input type="file" id="jsonUpload" accept=".json" onchange="loadLocalDatabase(event)">
+        </div>
 
-    <div id="msgBox" class="message-box"></div>
-    <div id="resultsContainer" class="results-wrapper"></div>
+        <div class="input-group">
+            <input type="text" id="searchInput" placeholder="Search by Serial, Alias, or Debt ID...">
+            <button onclick="executeSearch()">Search</button>
+        </div>
+
+        <div id="msgBox" class="message-box"></div>
+        <div id="resultsContainer" class="results-wrapper"></div>
+    </div>
 </div>
 
 <script>
     let activeDatabase = null;
 
-    // Run automatically on page load to detect hosting mode
     window.addEventListener('DOMContentLoaded', () => {
         if (window.location.protocol === 'file:') {
-            // Direct open layout
             document.getElementById('localFilePicker').style.display = 'block';
-            showMessage("Please select the debts.json file above to unlock search initialization.", "error");
+            showMessage("Please select the debts.json file to unlock search.", "error");
         } else {
-            // Server hosted layout (Auto-Fetch)
             autoFetchDatabase();
         }
     });
 
-    // Strategy A: Server Auto-Fetch
     async function autoFetchDatabase() {
         try {
             const response = await fetch('debts.json');
             if (!response.ok) throw new Error();
             activeDatabase = await response.json();
-            showMessage("Database linked automatically via Server connection.", "success");
+            showMessage("✓ Database loaded successfully", "success");
         } catch (err) {
-            showMessage("Database Fetch Failed. Ensure debts.json exists in your directory.", "error");
+            showMessage("⚠ Database load failed. Ensure debts.json exists.", "error");
         }
     }
 
-    // Strategy B: Direct File Loading Bypass via User Selection
     function loadLocalDatabase(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -176,11 +303,11 @@
         reader.onload = function(e) {
             try {
                 activeDatabase = JSON.parse(e.target.result);
-                showMessage("Database parsed locally and loaded successfully!", "success");
+                showMessage("✓ Database loaded successfully", "success");
                 document.getElementById('localFilePicker').style.filter = "grayscale(100%)";
                 document.getElementById('localFilePicker').style.opacity = "0.6";
             } catch (err) {
-                showMessage("Error: The selected file is not a valid JSON structure.", "error");
+                showMessage("✗ Invalid JSON file format", "error");
             }
         };
         reader.readAsText(file);
@@ -193,29 +320,26 @@
         box.style.display = 'block';
     }
 
-    // Comprehensive Multi-Parameter Search Engine
     function executeSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const resultsContainer = document.getElementById('resultsContainer');
-        resultsContainer.innerHTML = ''; // Clean previous views
+        resultsContainer.innerHTML = '';
 
         if (!activeDatabase) {
-            showMessage("Error: No database data loaded yet.", "error");
+            showMessage("✗ No database loaded yet", "error");
             return;
         }
         if (!query) {
-            showMessage("Please provide a search identifier.", "error");
+            showMessage("✗ Please enter a search term", "error");
             return;
         }
 
         let matches = [];
 
-        // Scan the data registry structure
         for (const [serial, record] of Object.entries(activeDatabase)) {
             const debtId = record.debt_number ? record.debt_number.toLowerCase() : "";
             const alias = record.alias ? record.alias.toLowerCase() : "";
 
-            // Evaluate conditional checks across all 3 metrics
             if (serial === query || debtId === query || alias === query) {
                 matches.push({
                     serial: serial,
@@ -227,26 +351,32 @@
             }
         }
 
-        // Display logic engine
         if (matches.length > 0) {
-            document.getElementById('msgBox').style.display = 'none'; // Clear errors
+            document.getElementById('msgBox').style.display = 'none';
             
             matches.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'result-card';
                 card.innerHTML = `
-                    <div class="data-row"><strong>Serial Number:</strong> ${item.serial}</div>
-                    <div class="data-row"><strong>Debt ID:</strong> ${item.debt_number}</div>
-                    <div class="data-row"><strong>Alphanumeric Alias:</strong> ${item.alias}</div>
-                    <div class="data-row"><strong>Associated PLC:</strong> ${item.plc_amount}</div>
-                    <div class="data-row"><strong>Date Recorded:</strong> ${item.date_recorded}</div>
+                    <div class="data-row"><strong>Serial:</strong> <span>${item.serial}</span></div>
+                    <div class="data-row"><strong>Debt ID:</strong> <span>${item.debt_number}</span></div>
+                    <div class="data-row"><strong>Alias:</strong> <span>${item.alias}</span></div>
+                    <div class="data-row"><strong>PLC Amount:</strong> <span>${item.plc_amount}</span></div>
+                    <div class="data-row"><strong>Date Recorded:</strong> <span>${item.date_recorded}</span></div>
                 `;
                 resultsContainer.appendChild(card);
             });
         } else {
-            showMessage("No matching records found for that input parameter.", "error");
+            showMessage("✗ No matching records found", "error");
         }
     }
+
+    // Allow Enter key to trigger search
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeSearch();
+        });
+    });
 </script>
 
 </body>
